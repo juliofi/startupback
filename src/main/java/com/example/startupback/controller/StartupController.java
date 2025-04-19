@@ -17,14 +17,12 @@ public class StartupController {
     @Autowired
     private StartupRepository repository;
 
-    @CrossOrigin(origins = "*", allowedHeaders = "*")
     @PostMapping
     public void saveStartup(@RequestBody StartupRequestDTO data){
         Startup startupData = new Startup(data);
         repository.save(startupData);
     }
 
-    @CrossOrigin(origins = "*", allowedHeaders = "*")
     @GetMapping
     public List<StartupResponseDTO> getAll(){
 
