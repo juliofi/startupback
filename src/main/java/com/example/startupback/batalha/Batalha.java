@@ -1,4 +1,4 @@
-package com.example.startupback.torneio;
+package com.example.startupback.batalha;
 
 import com.example.startupback.startup.Startup;
 import jakarta.persistence.*;
@@ -23,8 +23,8 @@ public class Batalha {
     @ManyToOne
     private Startup startupB;
 
-    private Integer pontuacaoA = 70;
-    private Integer pontuacaoB = 70;
+    private Integer pontuacaoA;
+    private Integer pontuacaoB;
 
     private boolean finalizada = false;
 

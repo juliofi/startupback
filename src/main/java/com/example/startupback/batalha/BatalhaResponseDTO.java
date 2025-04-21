@@ -1,25 +1,26 @@
-package com.example.startupback.torneio;
+package com.example.startupback.batalha;
 
 import com.example.startupback.startup.Startup;
+import com.example.startupback.startup.StartupResponseDTO;
 
 public record BatalhaResponseDTO(
         Long id,
-        Startup startupA,
-        Startup startupB,
+        StartupResponseDTO startupA,
+        StartupResponseDTO startupB,
         Integer pontuacaoA,
         Integer pontuacaoB,
         boolean finalizada,
-        Startup vencedora
+        String vencedora
 ) {
     public BatalhaResponseDTO(Batalha batalha) {
         this(
                 batalha.getId(),
-                batalha.getStartupA(),
-                batalha.getStartupB(),
+                new StartupResponseDTO(batalha.getStartupA()),
+                new StartupResponseDTO(batalha.getStartupB()),
                 batalha.getPontuacaoA(),
                 batalha.getPontuacaoB(),
                 batalha.isFinalizada(),
-                batalha.getVencedora()
+                batalha.getVencedora() != null ? batalha.getVencedora().getNome() : null
         );
     }
 }
