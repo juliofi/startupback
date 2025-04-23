@@ -38,12 +38,9 @@ public class TorneioController {
             throw new RuntimeException("Número de startups inválido. Deve ser 4 ou 8.");
         }
 
-        // Não reseta mais a pontuação aqui! 👇 Removido o trecho de primeiraRodada
 
-        // Apaga batalhas anteriores
         batalhaRepository.deleteAll();
 
-        // Embaralha as startups
         Collections.shuffle(startups);
 
         List<Batalha> batalhas = new ArrayList<>();
@@ -55,7 +52,7 @@ public class TorneioController {
             Batalha batalha = new Batalha();
             batalha.setStartupA(a);
             batalha.setStartupB(b);
-            batalha.setPontuacaoA(a.getPontuacao()); // usa a pontuação atual da startup
+            batalha.setPontuacaoA(a.getPontuacao());
             batalha.setPontuacaoB(b.getPontuacao());
             batalha.setFinalizada(false);
             batalhas.add(batalha);
@@ -76,7 +73,7 @@ public class TorneioController {
         batalhaRepository.deleteByStartupId(id);
     }
 
-    // NOVO ENDPOINT: Finalizar batalha por ID
+
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     @PutMapping("/batalha/{id}")
     public ResponseEntity<Void> finalizarBatalha(@PathVariable Long id, @RequestBody AtualizarBatalhaDTO dto) {
@@ -88,7 +85,7 @@ public class TorneioController {
         batalha.setPontuacaoB(dto.pontuacaoB());
         batalha.setFinalizada(dto.finalizada());
 
-        // Atualiza os contadores de eventos para startupA
+
         Startup startupA = batalha.getStartupA();
         startupA.setContPitch(startupA.getContPitch() + dto.pitchsA());
         startupA.setContBug(startupA.getContBug() + dto.bugsA());
@@ -96,7 +93,7 @@ public class TorneioController {
         startupA.setContInvestidor(startupA.getContInvestidor() + dto.investidoresA());
         startupA.setContPenalidade(startupA.getContPenalidade() + dto.penalidadesA());
 
-        // Atualiza os contadores de eventos para startupB
+
         Startup startupB = batalha.getStartupB();
         startupB.setContPitch(startupB.getContPitch() + dto.pitchsB());
         startupB.setContBug(startupB.getContBug() + dto.bugsB());
@@ -104,7 +101,6 @@ public class TorneioController {
         startupB.setContInvestidor(startupB.getContInvestidor() + dto.investidoresB());
         startupB.setContPenalidade(startupB.getContPenalidade() + dto.penalidadesB());
 
-        // Atualiza pontuação da vencedora
         if (dto.vencedora() != null) {
             Optional<Startup> vencedoraOpt = startupRepository.findByNome(dto.vencedora());
             if (vencedoraOpt.isPresent()) {
@@ -115,7 +111,6 @@ public class TorneioController {
             }
         }
 
-        // Salva as startups com eventos atualizados
         startupRepository.save(startupA);
         startupRepository.save(startupB);
 
@@ -139,7 +134,7 @@ public class TorneioController {
     public ResponseEntity<Void> resetarTorneio() {
         batalhaRepository.deleteAll();
         startupRepository.deleteAll();
-        return ResponseEntity.ok().build(); // <- resposta 200 OK
+        return ResponseEntity.ok().build();
     }
 
 
@@ -148,13 +143,11 @@ public class TorneioController {
     public List<BatalhaResponseDTO> avancarParaProximaFase() {
         List<Batalha> batalhasFinalizadas = batalhaRepository.findByFinalizadaTrue();
 
-        // 1. Verifica se todas as batalhas foram finalizadas
         long totalBatalhas = batalhaRepository.count();
         if (batalhasFinalizadas.size() < totalBatalhas) {
             throw new RuntimeException("Ainda há batalhas não finalizadas.");
         }
 
-        // 2. Pega os vencedores sem duplicações
         List<Startup> vencedoras = new ArrayList<>(
                 batalhasFinalizadas.stream()
                         .map(Batalha::getVencedora)
@@ -163,23 +156,15 @@ public class TorneioController {
                         .toList()
         );
 
-        // LOG para debug
-        System.out.println("Vencedoras:");
-        vencedoras.forEach(v -> System.out.println(v.getNome() + " (ID: " + v.getId() + ")"));
-
-        // Se sobrou só uma startup, o torneio terminou — não há como formar novas batalhas
-        // Se só sobrou uma startup, o torneio terminou
         if (vencedoras.size() == 1) {
             return new ArrayList<>();
         }
 
-// ⚠️ Garantia extra: se houver só 1 batalha anterior e ela foi final, não cria mais nada
         if (totalBatalhas == 1 && vencedoras.size() == 2) {
             return new ArrayList<>();
         }
 
 
-        // 3. Cria as novas batalhas (sem embaralhar)
         List<Batalha> novasBatalhas = new ArrayList<>();
         for (int i = 0; i < vencedoras.size(); i += 2) {
             Batalha nova = new Batalha();
@@ -191,17 +176,8 @@ public class TorneioController {
             novasBatalhas.add(nova);
         }
 
-        // 🧠 Adicione AQUI a impressão dos pares criados
-        System.out.println("🔄 Criando novas batalhas:");
-        for (Batalha b : novasBatalhas) {
-            System.out.println("→ " + b.getStartupA().getNome() + " vs " + b.getStartupB().getNome());
-        }
-
-
-        // 4. Limpa batalhas anteriores
         batalhaRepository.deleteAll();
 
-        // 5. Salva e retorna novas batalhas
         return batalhaRepository.saveAll(novasBatalhas)
                 .stream()
                 .map(BatalhaResponseDTO::new)

@@ -42,10 +42,9 @@ public class StartupController {
     @DeleteMapping("/{id}")
     @Transactional
     public void deleteStartup(@PathVariable Long id) {
-        // Limpa todas as batalhas antes
+
         batalhaRepository.deleteAll();
 
-        // Agora sim pode deletar a startup
         repository.deleteById(id);
     }
 
